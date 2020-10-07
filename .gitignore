@@ -47,3 +47,8 @@ readme.rst
 contributing.md
 
 /application/views/errors/*
+
+/bootstrap/*
+
+/txt/*
+/txt2/*
