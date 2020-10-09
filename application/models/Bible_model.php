@@ -100,7 +100,7 @@
 			$bible_short = null;
 			$testament = null;
 
-			$bible_list = $this->getBibleList(); // 성경책 전체 목록 갖고 오기
+			$bible_list = $this->getBibleList("전체"); // 성경책 전체 목록 갖고 오기
 			foreach($bible_list as $no => $val) {
 				$search_bible_name = $val->bible_name;
 				$search_position = strpos($file_name, $search_bible_name);
@@ -125,23 +125,151 @@
 
 		/**
 		 * @author 배진모
+		 * @see 성경책 검색 결과 보여주기
+		 * @param data
+		 * @return array
+		 */
+		public function getVerseList($data)
+		{
+			$result = true;
+			$message = "찾기 완료";
+
+			$bible_short = $data["bible_short"];
+			$chapter = $data["chapter"];
+
+			$db_select = array();
+			array_push($db_select, array("*", TRUE));
+
+			$db_where = array();
+
+			array_push($db_where, ["bible_short", $bible_short, TRUE]);
+			array_push($db_where, ["chapter", $chapter, TRUE]);
+
+			$db_data["db_table"] = "bible";
+			$db_data["db_select"] = $db_select;
+			$db_data["db_where"] = $db_where;
+
+			$db_result = $this->query_model->dbList($db_data);
+
+			$proc_result = array();
+			$proc_result["result"] = $result;
+			$proc_result["message"] = $message;
+			$proc_result["verse_list"] = $db_result["db_list"];
+
+			return $proc_result;
+		}
+
+		/**
+		 * @author 배진모
+		 * @see 성경책 장(chapter) 결과 보여주기
+		 * @param data
+		 * @return array
+		 */
+		public function getChapterList($data)
+		{
+			$result = true;
+			$message = "찾기 완료";
+
+			$bible_short = $data["bible_short"];
+
+			$db_select = array();
+			array_push($db_select, array("*", TRUE));
+
+			$db_where = array();
+			array_push($db_where, ["bible_short", $bible_short, TRUE]);
+
+			$db_data["db_table"] = "search";
+			$db_data["db_select"] = $db_select;
+			$db_data["db_where"] = $db_where;
+
+			$db_result = $this->query_model->dbView($db_data);
+			$db_view = $db_result["db_view"];
+			$chapter_list = explode("|", $db_view->chapters);
+
+			$proc_result = array();
+			$proc_result["result"] = $result;
+			$proc_result["message"] = $message;
+			$proc_result["chapter_list"] = $chapter_list;
+
+			return $proc_result;
+		}
+
+		/**
+		 * @author 배진모
 		 * @see 성경책 목록 갖고 오기
-		 * @param null
+		 * @param $mode - 검색조건 (전체, 신약, 구약)
 		 * @return array $proc_result
 		 */
-		public function getBibleList()
+		public function getBibleList($mode)
 		{
+			$result = true;
+			$message = "찾기 완료";
+
+			if($mode == "전체") {
+				// 아무것도 안함
+			} else {
+				$db_where = array();
+				array_push($db_where, ["testament", $mode, TRUE]);
+			}
+
 			$db_select = array();
 			array_push($db_select, array("*", TRUE));
 
 			$db_data["db_table"] = "search";
 			$db_data["db_select"] = $db_select;
+			$db_data["db_order"] = "search_idx";
+			if($db_where != null) {
+				$db_data["db_where"] = $db_where;
+			}
+			$db_result = $this->query_model->dbList($db_data);
 
-			$bible_list = $this->query_model->dbList($db_data);
+			$proc_result = array();
+			$proc_result["result"] = $result;
+			$proc_result["message"] = $message;
+			$proc_result["bible_list"] = $db_result["db_list"];
 
-			return $bible_list;
+			return $proc_result;
+
 		}
 
+		/**
+		 * @author 배진모
+		 * @see 성경책 목록 갖고 오기
+		 * @param null
+		 * @return array $proc_result
+		 */
+		public function chapterUpdate()
+		{
+			$result = true;
+			$message = "입력완료";
+
+			$sql = "select a.testament, a.bible_short, GROUP_CONCAT(distinct a.chapter order by a.chapter asc separator '|') as chapters from bible a group by a.testament, a.bible_short";
+			$chapter_list = $this->query_model->dbListQuery($sql);
+			foreach($chapter_list as $no => $val) {
+				$testament = $val->testament;
+				$bible_short = $val->bible_short;
+				$chapters = $val->chapters;
+
+				$db_column = array();
+				array_push($db_column, array("chapters", $chapters, TRUE));
+
+				$db_where = array();
+				array_push($db_where, array("testament", $testament, TRUE));
+				array_push($db_where, array("bible_short", $bible_short, TRUE));
+
+				$db_data = array();
+				$db_data["db_table"] = "search";
+				$db_data["db_column"] = $db_column;
+				$db_data["db_where"] = $db_where;
+				$db_result = $this->query_model->dbUpdate($db_data);
+			}
+
+			$proc_result = array();
+			$proc_result["result"] = $result;
+			$proc_result["message"] = $message;
+
+			return $proc_result;
+		}
 
 
 	}

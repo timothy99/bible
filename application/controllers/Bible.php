@@ -24,8 +24,138 @@
 		 */
 		public function main()
 		{
-			$this->load->view("main");
-			$this->log_model->logMessage("시험중");
+			// 최초 로딩시
+			$data = array();
+			$data["testament"] = "구약";
+			$data["bible_short"] = "창";
+			$data["chapter"] = "1";
+			$proc_result = $this->bible_model->getVerseList($data);
+			$verse_list = $proc_result["verse_list"];
+			$proc_result = $this->bible_model->getBibleList($data["testament"]);
+			$bible_list = $proc_result["bible_list"];
+			$proc_result = $this->bible_model->getChapterList($data);
+			$chapter_list = $proc_result["chapter_list"];
+
+			$proc_result = array();
+			$proc_result["result"] = true;
+			$proc_result["message"] = "성경을 잘 보여줍니다";
+			$proc_result["data"] = $data;
+			$proc_result["bible_list"] = $bible_list;
+			$proc_result["verse_list"] = $verse_list;
+			$proc_result["chapter_list"] = $chapter_list;
+
+			$this->load->view("main", $proc_result);
+		}
+
+		/**
+		 * @author 배진모
+		 * @see 구약 신약 눌렀을때 성경의 리스트 찾아오고 최초 성경의 첫장으로 데이터 로딩
+		 * @param testament
+		 * @return json_array
+		 */
+		public function searchBible()
+		{
+			$testament = $this->input->post("testament", TRUE) == null ? null : $this->input->post("testament", TRUE);
+			$data = array();
+			$data["testament"] = $testament;
+			if($testament == "구약") {
+				$data["bible_short"] = "창";
+			} else {
+				$data["bible_short"] = "마";
+			}
+			$data["chapter"] = "1";
+
+			$proc_result = $this->bible_model->getBibleList($testament);
+			$bible_list = $proc_result["bible_list"];
+			$proc_result = $this->bible_model->getChapterList($data);
+			$chapter_list = $proc_result["chapter_list"];
+			$proc_result = $this->bible_model->getVerseList($data);
+			$verse_list = $proc_result["verse_list"];
+
+			$proc_result = array();
+			$proc_result["result"] = true;
+			$proc_result["message"] = "성경을 잘 보여줍니다";
+			$proc_result["data"] = $data;
+			$proc_result["bible_list"] = $bible_list;
+			$proc_result["chapter_list"] = $chapter_list;
+			$proc_result["verse_list"] = $verse_list;
+
+			$bible_html = $this->load->view("bible", $proc_result, TRUE);
+			$chapter_html = $this->load->view("chapter", $proc_result, TRUE);
+			$verse_html = $this->load->view("verse", $proc_result, TRUE);
+
+			$html_result = array();
+			$html_result["bible_html"] = $bible_html;
+			$html_result["chapter_html"] = $chapter_html;
+			$html_result["verse_html"] = $verse_html;
+
+			echo json_encode($html_result);
+		}
+
+		/**
+		 * @author 배진모
+		 * @see 성경을 눌렀을때 장을 찾아오고 성경의 첫장의 내용을 화면에 보여줌
+		 * @param testament
+		 * @return json_array
+		 */
+		public function searchChapter()
+		{
+			$bible_short = $this->input->post("bible_short", TRUE) == null ? null : $this->input->post("bible_short", TRUE);
+			$data = array();
+			$data["bible_short"] = $bible_short;
+			$data["chapter"] = "1";
+
+			$proc_result = $this->bible_model->getChapterList($data);
+			$chapter_list = $proc_result["chapter_list"];
+			$proc_result = $this->bible_model->getVerseList($data);
+			$verse_list = $proc_result["verse_list"];
+
+			$proc_result = array();
+			$proc_result["result"] = true;
+			$proc_result["message"] = "성경을 잘 보여줍니다";
+			$proc_result["data"] = $data;
+			$proc_result["chapter_list"] = $chapter_list;
+			$proc_result["verse_list"] = $verse_list;
+
+			$chapter_html = $this->load->view("chapter", $proc_result, TRUE);
+			$verse_html = $this->load->view("verse", $proc_result, TRUE);
+
+			$html_result = array();
+			$html_result["chapter_html"] = $chapter_html;
+			$html_result["verse_html"] = $verse_html;
+
+			echo json_encode($html_result);
+		}
+
+		/**
+		 * @author 배진모
+		 * @see 성경을 눌렀을때 장을 찾아오고 성경의 첫장의 내용을 화면에 보여줌
+		 * @param testament
+		 * @return json_array
+		 */
+		public function searchVerse()
+		{
+			$bible_short = $this->input->post("bible_short", TRUE) == null ? null : $this->input->post("bible_short", TRUE);
+			$chapter = $this->input->post("chapter", TRUE) == null ? null : $this->input->post("chapter", TRUE);
+			$data = array();
+			$data["bible_short"] = $bible_short;
+			$data["chapter"] = $chapter;
+
+			$proc_result = $this->bible_model->getVerseList($data);
+			$verse_list = $proc_result["verse_list"];
+
+			$proc_result = array();
+			$proc_result["result"] = true;
+			$proc_result["message"] = "성경을 잘 보여줍니다";
+			$proc_result["data"] = $data;
+			$proc_result["verse_list"] = $verse_list;
+
+			$verse_html = $this->load->view("verse", $proc_result, TRUE);
+
+			$html_result = array();
+			$html_result["verse_html"] = $verse_html;
+
+			echo json_encode($html_result);
 		}
 
 		/**
@@ -49,6 +179,8 @@
 				$proc_result = $this->bible_model->procBibleText($data); // 성경파일 처리
 			}
 
+			// 처리된 성경책을 기준으로 장 수를 구한다음 그걸 검색용으로 데이터 입력
+			$proc_result = $this->bible_model->chapterUpdate();
 		}
 
 	}
