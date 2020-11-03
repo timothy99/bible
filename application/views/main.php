@@ -10,6 +10,9 @@
 		<title>bible search</title>
 
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+		<style>
+			.row { margin-top : 10px;}
+		</style>
 	</head>
 	<body>
 		<form id="frm" name="frm">
@@ -17,16 +20,16 @@
 			<div class="container">
 				<div class="row">
 					<div class="col-3">
-						<button type="button" class="btn btn-info" onclick="search_bible('구약')">구</button>
+						<button type="button" class="btn btn-info btn-block" onclick="search_bible('구약')">구약</button>
 					</div>
 					<div class="col-3">
-						<button type="button" class="btn btn-warning" onclick="search_bible('신약')">신</button>
+						<button type="button" class="btn btn-warning btn-block" onclick="search_bible('신약')">신약</button>
 					</div>
 					<div class="col-3">
-						<button type="button" class="btn btn-danger" onclick="prev_chapter('신약')">&lt;</button>
+						<button type="button" class="btn btn-danger btn-block" onclick="move_chapter('prev')">이전</button>
 					</div>
 					<div class="col-3">
-						<button type="button" class="btn btn-success" onclick="next_chapter('신약')">&gt;</button>
+						<button type="button" class="btn btn-success btn-block" onclick="move_chapter('next')">다음</button>
 					</div>
 				</div>
 				<div class="row">
@@ -45,12 +48,12 @@
 						</select>
 					</div>
 				</div>
+				<div class="row"></row>
 				<table class="table table-condensed table-hover" id="verse">
 					<tbody>
 <?php	foreach($verse_list as $no => $val) { ?>
 						<tr>
-							<th style="width:25%"><?=$val->bible_short ?><?=$val->chapter ?>:<?=$val->verse ?></th>
-							<td><?=$val->contents ?></td>
+							<td><b>[<?=$val->bible_short ?><?=$val->chapter ?>:<?=$val->verse ?>]</b> <?=$val->contents ?></td>
 						</tr>
 <?php	} ?>
 					</tbody>
