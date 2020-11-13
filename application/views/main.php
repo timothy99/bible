@@ -16,14 +16,18 @@
 	</head>
 	<body>
 		<form id="frm" name="frm">
-			<input type="hidden" id="bible_input" name="bible_input" value="<?=$data["bible_short"] ?>">
+			<input type="hidden" id="testament" name="testament" value="구약">
+			<input type="hidden" id="bible_short" name="bible_short" value="창">
+			<input type="hidden" id="chapter" name="chapter" value="1">
+			<input type="hidden" id="mode" name="mode" value="testament">
+			<input type="hidden" id="search_text" name="search_text" value="구약">
 			<div class="container">
 				<div class="row">
 					<div class="col-3">
-						<button type="button" class="btn btn-info btn-block" onclick="search_bible('구약')">구약</button>
+						<button type="button" class="btn btn-info btn-block" onclick="search_bible('testament','구약')">구약</button>
 					</div>
 					<div class="col-3">
-						<button type="button" class="btn btn-warning btn-block" onclick="search_bible('신약')">신약</button>
+						<button type="button" class="btn btn-warning btn-block" onclick="search_bible('testament','신약')">신약</button>
 					</div>
 					<div class="col-3">
 						<button type="button" class="btn btn-danger btn-block" onclick="move_chapter('prev')">이전</button>
@@ -34,29 +38,16 @@
 				</div>
 				<div class="row">
 					<div class="col-7">
-						<select class="form-control" id="bible" name="bible" onchange="search_chapter(this.value)">
-<?php	foreach($bible_list as $no => $val) { ?>
-							<option value="<?=$val->bible_short ?>" <?php if($val->bible_short == $data["bible_short"]) echo "selected"; ?>><?=$val->bible_name ?>(<?=$val->bible_short ?>)</option>
-<?php	} ?>
+						<select class="form-control" id="bible" name="bible" onchange="search_bible('bible', this.value)">
 						</select>
 					</div>
 					<div class="col-5">
-						<select class="form-control" id="chapter" name="chapter" onchange="search_verse(this.value)">
-<?php	foreach($chapter_list as $no => $val) { ?>
-							<option value="<?=$val ?>"><?=$val ?>장</option>
-<?php	} ?>
+						<select class="form-control" id="chapter_select" name="chapter" onchange="search_bible('chapter', this.value)">
 						</select>
 					</div>
 				</div>
 				<div class="row"></row>
 				<table class="table table-condensed table-hover" id="verse">
-					<tbody>
-<?php	foreach($verse_list as $no => $val) { ?>
-						<tr>
-							<td><b>[<?=$val->bible_short ?><?=$val->chapter ?>:<?=$val->verse ?>]</b> <?=$val->contents ?></td>
-						</tr>
-<?php	} ?>
-					</tbody>
 				</table>
 			</div>
 		</form>
@@ -68,47 +59,25 @@
 <script src="//stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
 
 <script>
-	function search_bible(testament) {
-		jQuery.ajax({
+	function search_bible(mode, search_text) {
+		document.getElementById("mode").value = mode;
+		document.getElementById("search_text").value = search_text;
+		$.ajax({
 			url: "/bible/searchBible",
 			type: "POST",
 			dataType: "json",
 			async: true,
-			data: {testament : testament},
+			data: $("#frm").serialize(),
 			success: function(proc_result) {
+				document.getElementById("testament").value = proc_result.testament;
+				document.getElementById("bible_short").value = proc_result.bible_short;
+				document.getElementById("chapter").value = proc_result.chapter;
 				document.getElementById("bible").innerHTML = proc_result.bible_html;
-				document.getElementById("chapter").innerHTML = proc_result.chapter_html;
+				document.getElementById("chapter_select").innerHTML = proc_result.chapter_html;
 				document.getElementById("verse").innerHTML = proc_result.verse_html;
 			}
 		});
 	}
 
-	function search_chapter(bible_short) {
-		document.getElementById("bible_input").value = bible_short;
-		jQuery.ajax({
-			url: "/bible/searchChapter",
-			type: "POST",
-			dataType: "json",
-			async: true,
-			data: {bible_short : bible_short},
-			success: function(proc_result) {
-				document.getElementById("chapter").innerHTML = proc_result.chapter_html;
-				document.getElementById("verse").innerHTML = proc_result.verse_html;
-			}
-		});
-	}
-
-	function search_verse(chapter) {
-		bible_short = document.getElementById("bible_input").value;
-		jQuery.ajax({
-			url: "/bible/searchVerse",
-			type: "POST",
-			dataType: "json",
-			async: true,
-			data: {bible_short : bible_short, chapter : chapter},
-			success: function(proc_result) {
-				document.getElementById("verse").innerHTML = proc_result.verse_html;
-			}
-		});
-	}
+	search_bible("testament", "구약"); // 최초 실행시 처음 성경책 보여주기
 </script>

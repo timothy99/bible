@@ -171,6 +171,7 @@
 			$message = "찾기 완료";
 
 			$bible_short = $data["bible_short"];
+			$chapter = $data["chapter"];
 
 			$db_select = array();
 			array_push($db_select, array("*", TRUE));
@@ -184,7 +185,19 @@
 
 			$db_result = $this->query_model->dbView($db_data);
 			$db_view = $db_result["db_view"];
-			$chapter_list = explode("|", $db_view->chapters);
+			$chapter_arr = explode("|", $db_view->chapters);
+			$chapter_list = array();
+			foreach($chapter_arr as $no => $array_chapter) {
+				if($array_chapter == $chapter) {
+					$selected = "selected";
+				} else {
+					$selected = "";
+				}
+				$chapter_info = new stdClass();
+				$chapter_info->chapter = $array_chapter;
+				$chapter_info->selected = $selected;
+				array_push($chapter_list, $chapter_info);
+			}
 
 			$proc_result = array();
 			$proc_result["result"] = $result;
@@ -200,11 +213,13 @@
 		 * @param $mode - 검색조건 (전체, 신약, 구약)
 		 * @return array $proc_result
 		 */
-		public function getBibleList($mode)
+		public function getBibleList($data)
 		{
 			$result = true;
 			$message = "찾기 완료";
 
+			$mode = $data["testament"];
+			$bible_short = $data["bible_short"];
 			if($mode == "전체") {
 				// 아무것도 안함
 			} else {
@@ -222,11 +237,22 @@
 				$db_data["db_where"] = $db_where;
 			}
 			$db_result = $this->query_model->dbList($db_data);
+			$bible_list = $db_result["db_list"];
+			
+			foreach($bible_list as $no => $val) {
+				if($val->bible_short == $bible_short) {
+					$selected = "selected";
+				} else {
+					$selected = "";
+				}
+				$bible_list[$no]->selected = $selected;
+			}
 
 			$proc_result = array();
 			$proc_result["result"] = $result;
 			$proc_result["message"] = $message;
-			$proc_result["bible_list"] = $db_result["db_list"];
+			$proc_result["bible_list"] = $bible_list;
+			
 
 			return $proc_result;
 
